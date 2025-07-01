@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ interface Assignment {
   id: number;
   title: string;
   description: string;
-  type: "assignment" | "cat";
+  type: "assignment" | "cat" | "exam";
   questions?: string;
   deadline: string;
   unitId?: number;
@@ -40,7 +40,7 @@ interface Unit {
 const assignmentSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  type: z.enum(["assignment", "cat"]),
+  type: z.enum(["assignment", "cat", "exam"]),
   questions: z.string().optional(),
   deadline: z.string().min(1, "Deadline is required"),
   unitId: z.string().optional(),
@@ -50,6 +50,7 @@ type AssignmentFormData = z.infer<typeof assignmentSchema>;
 
 export default function Assignments() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<"assignment" | "cat" | "exam">("assignment");
   const { toast } = useToast();
 
   const { data: assignments, isLoading: isAssignmentsLoading } = useQuery<Assignment[]>({
@@ -132,12 +133,17 @@ export default function Assignments() {
     defaultValues: {
       title: "",
       description: "",
-      type: "assignment",
+      type: selectedType,
       questions: "",
       deadline: "",
       unitId: "",
     },
   });
+
+  // Update form when selectedType changes
+  useEffect(() => {
+    form.setValue("type", selectedType);
+  }, [selectedType, form]);
 
   const onSubmit = (data: AssignmentFormData) => {
     createMutation.mutate(data);
@@ -182,6 +188,15 @@ export default function Assignments() {
     }
   };
 
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case "assignment": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "cat": return "bg-orange-100 text-orange-800 border-orange-200";
+      case "exam": return "bg-red-100 text-red-800 border-red-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
   const upcomingAssignments = assignments?.filter(a => !a.completed && a.daysUntilDue >= 0) || [];
   const overdueAssignments = assignments?.filter(a => !a.completed && a.daysUntilDue < 0) || [];
   const completedAssignments = assignments?.filter(a => a.completed) || [];
@@ -194,20 +209,39 @@ export default function Assignments() {
         <main className="p-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-semibold text-charcoal mb-2">Assignments & CATs</h1>
-              <p className="text-soft-black/70">Track your assignments and continuous assessment tests</p>
+              <h1 className="text-3xl font-semibold text-charcoal mb-2">Assignments, CATs & Exams</h1>
+              <p className="text-soft-black/70">Track your assignments, continuous assessment tests, and exams</p>
             </div>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-soft-golden hover:bg-warning-soft text-white">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Assignment
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Create New Assignment</DialogTitle>
-                </DialogHeader>
+            <div className="flex gap-3">
+              <Button 
+                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                onClick={() => { setSelectedType("assignment"); setIsCreateDialogOpen(true); }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Assignment
+              </Button>
+              <Button 
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                onClick={() => { setSelectedType("cat"); setIsCreateDialogOpen(true); }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                CAT
+              </Button>
+              <Button 
+                className="bg-red-500 hover:bg-red-600 text-white"
+                onClick={() => { setSelectedType("exam"); setIsCreateDialogOpen(true); }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Exam
+              </Button>
+            </div>
+          </div>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New {selectedType === "cat" ? "CAT" : selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}</DialogTitle>
+              </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
@@ -241,6 +275,7 @@ export default function Assignments() {
                             <SelectContent>
                               <SelectItem value="assignment">Assignment</SelectItem>
                               <SelectItem value="cat">CAT (Continuous Assessment Test)</SelectItem>
+                              <SelectItem value="exam">Exam</SelectItem>
                             </SelectContent>
                           </Select>
                         </FormItem>
@@ -572,7 +607,6 @@ export default function Assignments() {
           </div>
         </main>
       </div>
-      <FloatingAddButton />
     </div>
   );
 }

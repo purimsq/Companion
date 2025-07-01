@@ -313,13 +313,23 @@ export default function Units() {
                         <Calendar className="w-3 h-3 mr-1" />
                         <span>{unit.lastStudied}</span>
                       </div>
-                      <Badge 
-                        variant={unit.progressPercentage > 75 ? "default" : unit.progressPercentage > 25 ? "secondary" : "outline"}
-                        className="text-xs"
-                      >
-                        {unit.progressPercentage > 75 ? "Almost Done" : 
-                         unit.progressPercentage > 25 ? "In Progress" : "Getting Started"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={unit.progressPercentage > 75 ? "default" : unit.progressPercentage > 25 ? "secondary" : "outline"}
+                          className="text-xs"
+                        >
+                          {unit.progressPercentage > 75 ? "Almost Done" : 
+                           unit.progressPercentage > 25 ? "In Progress" : "Getting Started"}
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          className="bg-soft-golden hover:bg-warning-soft text-white text-xs h-6 px-2"
+                          onClick={() => {/* TODO: Open upload modal for this specific unit */}}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add PDF
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

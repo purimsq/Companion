@@ -61,7 +61,7 @@ export const assignments = pgTable("assignments", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  type: text("type").notNull(), // 'assignment' or 'cat'
+  type: text("type").notNull(), // 'assignment', 'cat', or 'exam'
   questions: text("questions"), // Could be typed questions or uploaded doc content
   deadline: timestamp("deadline").notNull(),
   unitId: integer("unit_id"),
